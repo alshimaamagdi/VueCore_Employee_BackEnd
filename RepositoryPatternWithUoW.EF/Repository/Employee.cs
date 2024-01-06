@@ -23,39 +23,51 @@ namespace RepositoryPatternWithUoW.EF.Repository
 {
     public class Employee : Generic<Employees>, IEmployee
     {
-        private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        private readonly HttpContext _HttpContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-  
-        public Employee(ApplicationDbContext context,  IMapper mapper, HttpContext HttpContext) : base(context)
+        public Employee(ApplicationDbContext context,  IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(context)
         {
             _mapper = mapper;
-            _HttpContext = HttpContext;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<EmployeeAddEditModel> AddEmployee(EmployeeAddModel model)
         {
             #region newEmployee
             var newEmployee = new Employees();
-            newEmployee.Name = model.Email;
+            newEmployee.Name = model.Name;
+            newEmployee.Email = model.Email;
             newEmployee.phoneNumber = model.phoneNumber;
             newEmployee.AcademicLevel = model.AcademicLevel;
             newEmployee.CreatedBy = model.createdBy;
             #endregion
 
             #region Photo
-            var file = _HttpContext.Request.Form.Files.GetFile("ImageFile");
-            if (file != null)
+            var httpContext = _httpContextAccessor.HttpContext;
+
+            if (httpContext != null)
             {
-                model.image = await MediaControl.Upload(FilePath.EmployeeImage, file);
+                var form = httpContext.Request.Form;
+                var files = form.Files;
+
+                if (files.Count > 0)
+                {
+                    var file = files.GetFile("ImageFile");
+                    // Proceed with processing the file
+                    newEmployee.image = await MediaControl.Upload(FilePath.EmployeeImage, file);
+
+                }
+       
             }
-            await SaveChanges();
+
+            await Add(newEmployee);
 
             #endregion
 
             #region Mapper
-            EmployeeAddEditModel result = _mapper.Map<EmployeeAddEditModel>(newEmployee);
+            
+            EmployeeAddEditModel result = _mapper.Map<Employees, EmployeeAddEditModel>(newEmployee); ;
           
             return result;
             #endregion
@@ -79,11 +91,12 @@ namespace RepositoryPatternWithUoW.EF.Repository
 
         public async Task<EmployeeAddEditModel> EditEmployee(EmployeeEditModel model)
         {
-            Employees GetEmployee = await _context.Employees.Where(a => a.Id == model.Id).FirstOrDefaultAsync();
+            Employees GetEmployee = await _context.Employees.Where(a => a.Id == model.Id).Include(a => a.CreatedUser).Include(a => a.ModifiedUser).FirstOrDefaultAsync();
             if(GetEmployee != null)
             {
                 #region UpdateExistEmployee
-                GetEmployee.Name = model.Email;
+                GetEmployee.Name = model.Name;
+                GetEmployee.Email = model.Email;
                 GetEmployee.phoneNumber = model.phoneNumber;
                 GetEmployee.AcademicLevel = model.AcademicLevel;
                 GetEmployee.ModifiedOn = DateTime.Now;
@@ -92,10 +105,20 @@ namespace RepositoryPatternWithUoW.EF.Repository
                 #endregion
 
                 #region Photo
-                var file = _HttpContext.Request.Form.Files.GetFile("ImageFile");
-                if (file != null)
+                var httpContext = _httpContextAccessor.HttpContext;
+
+                if (httpContext != null)
                 {
-                    model.image = await MediaControl.Upload(FilePath.EmployeeImage, file);
+                    var form = httpContext.Request.Form;
+                    var files = form.Files;
+
+                    if (files.Count > 0)
+                    {
+                        var file = files.GetFile("ImageFile");
+                        // Proceed with processing the file
+                        GetEmployee.image = await MediaControl.Upload(FilePath.EmployeeImage, file);
+                    }
+
                 }
                 await Update(GetEmployee);
 
@@ -110,17 +133,17 @@ namespace RepositoryPatternWithUoW.EF.Repository
 
         public async Task<List<EmployeeGetModel>> GetAllEmployees(int pageNumber, int pageSize, string accountId)
         {
-            var isAdmin = RolesUser.IsUserAdmin();
+            var isAdmin = _httpContextAccessor.HttpContext.User.IsInRole("Admin");
             IQueryable<Employees> query;
             #region Admin
             if (isAdmin)
             {
-                // If admin, materialize the query asynchronously and then use AutoMapper to map to EmployeeGetModel
+                // If admin
                 query= _context.Employees.AsQueryable().Where(a => a.IsDeleted == null)
                                          .OrderByDescending(a => a.Id)
                                          .Skip(pageNumber * pageSize)
                                          .Take(pageSize);
-                List<Employees> employees = await query.ToListAsync();
+                List<Employees> employees = await query.Include(a=>a.CreatedUser).Include(a=>a.ModifiedUser).ToListAsync();
                 List<EmployeeGetModel> result = _mapper.Map<List<EmployeeGetModel>>(employees);
                 return result;
             }
@@ -129,19 +152,20 @@ namespace RepositoryPatternWithUoW.EF.Repository
             #region User
             else
             {
-                // If not admin, directly project to EmployeeGetModel without materializing the query
+                // If not admin
                 query = _context.Employees.AsQueryable().Where(a => a.IsDeleted == null && a.CreatedBy == accountId)
                                          .OrderByDescending(a => a.Id)
                                          .Skip(pageNumber * pageSize)
                                          .Take(pageSize);
-                List<EmployeeGetModel> result = await _mapper.ProjectTo<EmployeeGetModel>(query).ToListAsync();
+                List<Employees> employees = await query.Include(a => a.CreatedUser).Include(a => a.ModifiedUser).Include(a => a.DeletedUser).ToListAsync();
+                List<EmployeeGetModel> result = _mapper.Map<List<EmployeeGetModel>>(employees);
                 return result;
             }
             #endregion
         }
         public async Task<EmployeeGetModel> GetEmployeeById(int id)
         {
-            Employees query =await _context.Employees.AsQueryable().Where(a => a.Id == id).FirstOrDefaultAsync();
+            Employees query =await _context.Employees.AsQueryable().Where(a => a.Id == id&&a.IsDeleted==null).Include(a => a.CreatedUser).Include(a => a.ModifiedUser).FirstOrDefaultAsync();
             EmployeeGetModel result = _mapper.Map<EmployeeGetModel>(query);
             return result;
         }

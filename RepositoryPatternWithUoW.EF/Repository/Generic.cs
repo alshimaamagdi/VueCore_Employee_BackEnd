@@ -12,7 +12,7 @@ namespace RepositoryPatternWithUoW.EF.Repository
 {
     public class Generic<T> : IGeneric<T> where T : class
     {
-        private readonly ApplicationDbContext _context;
+        protected readonly ApplicationDbContext _context;
         internal DbSet<T> _entity;
         public Generic(ApplicationDbContext context)
         {

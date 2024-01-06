@@ -14,7 +14,7 @@ namespace RepositoryPatternWithUoW.Core.Models.Domain
         public string Email { get; set; }
         public string phoneNumber { get; set; }
         public AcademicLevel AcademicLevel { get; set; }
-        public string image { get; set; }
+        public string? image { get; set; }
 
     
 

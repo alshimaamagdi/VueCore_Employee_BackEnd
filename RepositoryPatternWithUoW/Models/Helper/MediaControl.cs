@@ -19,7 +19,6 @@ namespace RepositoryPatternWithUoW.Core.Models.Helper
                     folderName = Path.Combine("wwwroot", "Images", "EmployeeImage");
                     break;
             }
-            FileInfo fileq = new FileInfo(folderName); fileq.IsReadOnly = false;
             string extension = Path.GetExtension(file.FileName);
             var UinqueName = Guid.NewGuid().ToString();
             if (!Directory.Exists(folderName))

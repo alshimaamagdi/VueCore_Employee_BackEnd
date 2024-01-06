@@ -9,7 +9,7 @@ using static RepositoryPatternWithUoW.Core.Interface.IGeneric;
 
 namespace RepositoryPatternWithUoW.Core.Interface
 {
-    public interface IEmployee
+    public interface IEmployee: IGeneric<Employees>
     {
         Task<List<EmployeeGetModel>> GetAllEmployees(int pageNumber,int pageSize,string accountId);
         Task<EmployeeGetModel> GetEmployeeById(int id);

@@ -21,7 +21,7 @@ namespace RepositoryPatternWithUoW.EF.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(_configuration.GetConnectionString("default"));
+                optionsBuilder.UseLazyLoadingProxies().UseSqlServer(_configuration.GetConnectionString("default"));
             }
         }
         public DbSet<Employees> Employees { get; set; }

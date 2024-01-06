@@ -22,7 +22,7 @@ namespace VueCore_Employee_BackEnd.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _unitOfWork.authorization.RegisterAsync(model);
+            var result = await _unitOfWork.Authorization.RegisterAsync(model);
 
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);
@@ -36,7 +36,7 @@ namespace VueCore_Employee_BackEnd.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _unitOfWork.authorization.LoginAsync(model);
+            var result = await _unitOfWork.Authorization.LoginAsync(model);
 
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);

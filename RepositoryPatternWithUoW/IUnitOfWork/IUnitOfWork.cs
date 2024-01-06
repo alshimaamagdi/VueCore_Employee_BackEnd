@@ -9,7 +9,7 @@ namespace RepositoryPatternWithUoW.Core.IUnitOfWork
 {
     public interface IUnitOfWork : IDisposable
     {
-        IAuthorization authorization { get; }
+        IAuthorization Authorization { get; }
         IEmployee Employee { get; }
     }
 }

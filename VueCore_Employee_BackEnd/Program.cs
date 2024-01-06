@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations.Internal;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RepositoryPatternWithUoW.Core.IUnitOfWork;
+using RepositoryPatternWithUoW.Core.Models.AutoMapper;
 using RepositoryPatternWithUoW.Core.Models.Domain;
 using RepositoryPatternWithUoW.Core.Models.Helper;
 using RepositoryPatternWithUoW.EF.Context;
@@ -23,10 +25,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(EmployeeMappingProfile));
+
 #region Database Configuration
 builder.Services.AddDbContext<ApplicationDbContext>(x => 
-x.UseSqlServer(builder.Configuration.GetConnectionString("default"),
+x.UseLazyLoadingProxies().UseSqlServer(builder.Configuration.GetConnectionString("default"),
 // Used when have a project (or assembly) that contains your DbContext and another project (or assembly) that contains your migrations.
 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
 ));
@@ -57,22 +60,22 @@ builder.Services.AddAuthentication()
 // Adding Jwt Bearer  
 .AddJwtBearer(options =>
 {
-    options.SaveToken = true;
     options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters = new TokenValidationParameters()
+    options.SaveToken = false;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-
+        ValidateIssuerSigningKey = true,
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["JWT:ValidAudience"],
-        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
+        ValidateLifetime = true,
+        ValidIssuer = builder.Configuration["JWT:Issuer"],
+        ValidAudience = builder.Configuration["JWT:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
     };
 });
 #endregion
-
 #region Unit Of Work Services
-builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 #endregion
 
 
@@ -82,7 +85,18 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API V1");
+
+        // Enable authorization in Swagger UI
+        c.OAuthClientId("swagger");
+        c.OAuthClientSecret("secret");
+        c.OAuthRealm("your-realm");
+        c.OAuthAppName("Swagger UI");
+        c.OAuthUsePkce();
+
+    });
 }
 app.UseHttpsRedirection();
 app.UseAuthentication();

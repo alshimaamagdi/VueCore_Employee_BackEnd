@@ -18,19 +18,14 @@ namespace RepositoryPatternWithUoW.EF.Repository
     public class Authorization : IAuthorization
     {
         private readonly UserManager<Users> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly JWT _jwt;
 
-        public Authorization(UserManager<Users> userManager, RoleManager<IdentityRole> roleManager, IOptions<JWT> jwt)
+        public Authorization(UserManager<Users> userManager,  IOptions<JWT> jwt)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
             _jwt = jwt.Value;
         }
-        public Authorization()
-        {
-
-        }
+  
         public async Task<AuthorizeReturnModel> RegisterAsync(RegisterModel model)
         {
             try

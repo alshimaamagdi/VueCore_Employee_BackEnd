@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RepositoryPatternWithUoW.Core.IUnitOfWork;
 using RepositoryPatternWithUoW.Core.Models.Dto.Employee;
 using System.Drawing.Printing;
+using System.Security.Claims;
 
 namespace VueCore_Employee_BackEnd.Controllers
 {
@@ -18,11 +19,11 @@ namespace VueCore_Employee_BackEnd.Controllers
         {
             _unitOfWork = unitOfWork;
         }
-        [HttpGet("LoadAllEmployees")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("LoadAllEmployees")]
         public async Task<IActionResult> LoadAllEmployees(int pageNumber, int pageSize)
         {
-            var UserId = User.Identity.Name;
+            var UserId = User.FindFirst("uid")?.Value;
             var GetAllEmployees = await _unitOfWork.Employee.GetAllEmployees(pageNumber, pageSize, UserId);
             return Ok(GetAllEmployees);
         }
@@ -37,9 +38,9 @@ namespace VueCore_Employee_BackEnd.Controllers
 
         [HttpPost("AddEmployee")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "User")]
-        public async Task<IActionResult> AddEmployee(EmployeeAddModel model)
+        public async Task<IActionResult> AddEmployee([FromForm] EmployeeAddModel model)
         {
-            var UserId = User.Identity.Name;
+            var UserId = User.FindFirst("uid")?.Value;
             model.createdBy = UserId;
 
             // Check if user is authorized
@@ -54,9 +55,9 @@ namespace VueCore_Employee_BackEnd.Controllers
 
         [HttpPut("EditEmployee")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        public async Task<IActionResult> EditEmployee(EmployeeEditModel model)
+        public async Task<IActionResult> EditEmployee([FromForm] EmployeeEditModel model)
         {
-            var UserId = User.Identity.Name;
+            var UserId = User.FindFirst("uid")?.Value;
             model.modifiedBy = UserId;
 
             // Check if user is authorized
@@ -73,7 +74,7 @@ namespace VueCore_Employee_BackEnd.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> DeleteEmployee(List<int> ids)
         {
-            var UserId = User.Identity.Name;
+            var UserId = User.FindFirst("uid")?.Value;
 
             // Check if user is authorized
             if (!User.IsInRole("Admin"))

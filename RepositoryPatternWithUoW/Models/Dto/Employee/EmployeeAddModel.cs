@@ -13,8 +13,8 @@ namespace RepositoryPatternWithUoW.Core.Models.Dto.Employee
         public string Email { get; set; }
         public string phoneNumber { get; set; }
         public AcademicLevel AcademicLevel { get; set; }
-        public string image { get; set; }
-        public string createdBy { get; set; }
+        public string? image { get; set; }
+        public string? createdBy { get; set; }
 
     }
 }
