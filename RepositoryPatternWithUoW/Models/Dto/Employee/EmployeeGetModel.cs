@@ -14,6 +14,7 @@ namespace RepositoryPatternWithUoW.Core.Models.Dto.Employee
         public string Email { get; set; }
         public string phoneNumber { get; set; }
         public string AcademicLevel { get; set; }
+        public AcademicLevel AcademicLevelValue { get; set; }
         public string image { get; set; }
         public string deletedBy { get; set; }
         public string createdBy { get; set; }
