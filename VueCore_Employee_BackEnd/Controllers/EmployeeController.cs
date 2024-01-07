@@ -19,8 +19,9 @@ namespace VueCore_Employee_BackEnd.Controllers
         {
             _unitOfWork = unitOfWork;
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("LoadAllEmployees")]
+        [HttpOptions("LoadAllEmployees")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> LoadAllEmployees(int pageNumber, int pageSize)
         {
             var UserId = User.FindFirst("uid")?.Value;
@@ -29,6 +30,7 @@ namespace VueCore_Employee_BackEnd.Controllers
         }
 
         [HttpGet("GetEmployeeById")]
+        [HttpOptions("GetEmployeeById")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetEmployeeById(int id)
         {
@@ -37,6 +39,7 @@ namespace VueCore_Employee_BackEnd.Controllers
         }
 
         [HttpPost("AddEmployee")]
+        [HttpOptions("AddEmployee")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "User")]
         public async Task<IActionResult> AddEmployee([FromForm] EmployeeAddModel model)
         {
@@ -54,6 +57,8 @@ namespace VueCore_Employee_BackEnd.Controllers
         }
 
         [HttpPut("EditEmployee")]
+        [HttpOptions("EditEmployee")]
+
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> EditEmployee([FromForm] EmployeeEditModel model)
         {
@@ -71,6 +76,8 @@ namespace VueCore_Employee_BackEnd.Controllers
         }
 
         [HttpDelete("DeleteEmployee")]
+        [HttpOptions("DeleteEmployee")]
+
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> DeleteEmployee(List<int> ids)
         {

@@ -17,6 +17,8 @@ namespace VueCore_Employee_BackEnd.Controllers
         }
 
         [HttpPost("Register")]
+        [HttpOptions("Register")]
+
         public async Task<IActionResult> RegisterAsync([FromBody]RegisterModel model)
         {
             if (!ModelState.IsValid)
@@ -31,6 +33,8 @@ namespace VueCore_Employee_BackEnd.Controllers
         }
 
         [HttpPost("Login")]
+        [HttpOptions("Login")]
+
         public async Task<IActionResult> LoginAsync([FromBody] LoginModel model)
         {
             if (!ModelState.IsValid)
